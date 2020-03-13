@@ -3,30 +3,34 @@ on: [push]
 
 jobs:
   Build:
-    runs-on: ${{ matrix.os }}
+    runs-on: 'ubuntu-18.04'
     strategy:
       matrix:
-        os: ['ubuntu-18.04', 'macos-10.15']
-        meteor: [ '1.8.1', '1.9.3']
-    name: Tdarr - ${{ matrix.os }} Build
+        arch: ['linux.x86_64', 'osx.x86_64', 'windows.x86_64']
+    name: Tdarr - ${{ matrix.arch }} Build
     steps:
       - uses: actions/checkout@v1
-      - uses: meteorengineer/setup-meteor@v1
+      - uses: actions/setup-node@v1
         with:
-          meteor-release: ${{ matrix.meteor }}
+          node-version: '12.6.1'
+      - name: Install Meteor
+        run: |
+          curl https://install.meteor.com/ | sh
+          meteor update --release 1.10.1
+
       - name: Install dependencies
         run: meteor npm install
 
-      - name: Build ${{ matrix.os }} Meteor-${{ matrix.meteor }}
-        run: meteor build --server localhost:8265 --directory ../tdarr-${{ matrix.os }}
+      - name: Build ${{ matrix.arch }}
+        run: meteor build ../tdarr-${{ matrix.arch }} --architecture os.${{ matrix.arch }}
 
-      - name: Pack ${{ matrix.os }}.zip (sh)
-        run: |
-            mkdir ../out
-            zip -r -q ../out/tdarr-${{ matrix.os }}-${{ matrix.meteor }}.zip ../tdarr-${{ matrix.os }}-${{ matrix.meteor }}/
+      # - name: Pack ${{ matrix.os }}.zip (sh)
+      #   run: |
+      #       mkdir ../out
+      #       zip -r -q ../out/tdarr-${{ matrix.os }}-${{ matrix.meteor }}.zip ../tdarr-${{ matrix.os }}-${{ matrix.meteor }}/
       
-      - name: Upload tdarr-${{ matrix.os }}-${{ matrix.meteor }}.zip
-        uses: actions/upload-artifact@v1
-        with:
-          name: tdarr-${{ matrix.os }}-${{ matrix.meteor }}
-          path: .\out
+      # - name: Upload tdarr-${{ matrix.os }}-${{ matrix.meteor }}.zip
+      #   uses: actions/upload-artifact@v1
+      #   with:
+      #     name: tdarr-${{ matrix.os }}-${{ matrix.meteor }}
+      #     path: .\out
